@@ -13,5 +13,7 @@ export class UploadController {
     @UploadedFile() file: Express.Multer.File
   ){
     console.log(file)
+    const upload = this.uploadService.single(file);
+    return upload
   }
 }
