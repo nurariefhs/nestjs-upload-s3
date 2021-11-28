@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ConsoleLogger, Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 
 const s3 = new AWS.S3();
@@ -6,12 +6,32 @@ const s3 = new AWS.S3();
 @Injectable()
 export class UploadService {
 
-    async single(file: Express.Multer.File){
-        const bucketPath = 'images'
+    async singleUpload(file: Express.Multer.File){
+        const bucketPath = 'images/'
+        return await this.uploadToBucket(file, process.env.AWS_S3_BUCKET_NAME, 'images/');
+    }
+
+    async arrayUpload(files: Array<Express.Multer.File>){
+        if(Array.isArray(files)){
+            const uploadPromises = [];
+            for(const [index, file] of files.entries()){
+                const upload = this.uploadToBucket(file, process.env.AWS_S3_BUCKET_NAME, 'images/');
+                uploadPromises.push(upload);
+            }
+            return Promise.all(uploadPromises)
+            .then(res => {
+                console.log(res)
+                return res
+            })
+        }
+        throw new BadRequestException('Files must be an Array')
+    }
+
+    async uploadToBucket(file: Express.Multer.File, bucketName: string, bucketPath: string = ''){
         return await s3.upload({
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Bucket: bucketName,
             Body: file.buffer,
-            Key: `${bucketPath}/${file.originalname}`
+            Key: `${bucketPath}${file.originalname}`
         }).promise();
     }
 }

@@ -1,5 +1,5 @@
-import { Controller, Get, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { Express } from "express";
 
@@ -13,7 +13,19 @@ export class UploadController {
     @UploadedFile() file: Express.Multer.File
   ){
     console.log(file)
-    const upload = this.uploadService.single(file);
-    return upload
+    console.log(Array.isArray(file));
+    // const upload = this.uploadService.singleUpload(file);
+    // return upload
+  }
+
+  @Post('array')
+  @UseInterceptors(FilesInterceptor('files'))
+  async array(
+    @UploadedFiles() files: Array<Express.Multer.File>
+  ){
+      // console.log(files);
+      console.log(Array.isArray(files));
+      const upload = this.uploadService.arrayUpload(files);
+      return upload;
   }
 }
